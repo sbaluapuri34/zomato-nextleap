@@ -1,0 +1,13 @@
+{
+  "runId": "phase1-1776787244185",
+  "datasetId": "ManikaSaini/zomato-restaurant-recommendation",
+  "source": "huggingface",
+  "status": "success",
+  "startedAt": "2026-04-21T16:00:44.183Z",
+  "finishedAt": "2026-04-21T16:00:46.085Z",
+  "rowCount": 100,
+  "config": "default",
+  "split": "train",
+  "snapshotHash": "e88427d0900c98a85285b0fc5b74a2eb8ff73245cc215b5d6fde7ee2d7f4e05a",
+  "snapshotPath": "C:\\Users\\user\\zomatonextleap\\zomato-nextleap\\phase1\\artifacts\\ingestion-runs\\phase1-1776787244185-raw-snapshot.json"
+}

@@ -1,0 +1,68 @@
+{
+  "source": {
+    "provider": "huggingface",
+    "dataset": "ManikaSaini/zomato-restaurant-recommendation"
+  },
+  "mapping": {
+    "name": {
+      "target_field": "name",
+      "type": "string",
+      "required": true,
+      "normalization": [
+        "trim",
+        "collapse_spaces",
+        "title_case"
+      ]
+    },
+    "place": {
+      "target_field": "place",
+      "type": "string",
+      "required": true,
+      "normalization": [
+        "trim",
+        "collapse_spaces",
+        "title_case"
+      ]
+    },
+    "price": {
+      "target_field": "price_for_two",
+      "type": "integer",
+      "required": true,
+      "normalization": [
+        "remove_currency_symbols",
+        "remove_commas",
+        "parse_integer"
+      ],
+      "example_input": "1,500",
+      "example_output": 1500
+    },
+    "rating": {
+      "target_field": "rating",
+      "type": "float",
+      "required": true,
+      "normalization": [
+        "extract_numeric_prefix",
+        "parse_float"
+      ],
+      "example_input": "4.1/5",
+      "example_output": 4.1
+    },
+    "cuisines": {
+      "target_field": "cuisines",
+      "type": "array<string>",
+      "required": true,
+      "normalization": [
+        "split_by_comma_or_slash",
+        "trim_each",
+        "title_case_each",
+        "deduplicate_preserve_order"
+      ],
+      "example_input": "north indian, Chinese / mughlai",
+      "example_output": [
+        "North Indian",
+        "Chinese",
+        "Mughlai"
+      ]
+    }
+  }
+}
