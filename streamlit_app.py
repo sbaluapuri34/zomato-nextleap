@@ -142,7 +142,6 @@ st.set_page_config(page_title="Zomato NextLeap | AI Recommendations", layout="wi
 
 st.markdown("""
     <style>
-    .main { background-color: #0f172a; color: #f1f5f9; }
     .stButton>button { background-color: #ff4757; color: white; border-radius: 12px; border: none; }
     </style>
 """, unsafe_allow_html=True)
