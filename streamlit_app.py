@@ -24,8 +24,9 @@ def parse_rating(raw: Any) -> float:
     return float(match.group(1)) if match else 0.0
 
 def canonicalize_cuisines(raw: Any) -> List[str]:
+    if not raw: return []
     if isinstance(raw, list): return [str(c).strip() for c in raw if c]
-    tokens = [t.strip() for t in re.split(r"[,/]", str(raw or "")) if t.strip()]
+    tokens = [t.strip() for t in re.split(r"[,/]", str(raw)) if t.strip()]
     seen = set()
     out = []
     for token in tokens:
@@ -49,45 +50,49 @@ def load_data():
     normalized = []
     for row in rows:
         normalized.append({
-            "name": str(row.get("name", "")).strip(),
-            "place": str(row.get("place", row.get("location", ""))).strip(),
-            "price_for_two": parse_price(row.get("price_for_two", row.get("approx_cost(for two people)", 0))),
-            "rating": parse_rating(row.get("rating", row.get("rate", 0))),
-            "cuisines": canonicalize_cuisines(row.get("cuisines", [])),
+            "name": str(row.get("name") or "").strip(),
+            "place": str(row.get("place") or row.get("location") or "").strip(),
+            "price_for_two": parse_price(row.get("price_for_two") or row.get("approx_cost(for two people)") or 0),
+            "rating": parse_rating(row.get("rating") or row.get("rate") or 0),
+            "cuisines": canonicalize_cuisines(row.get("cuisines") or []),
         })
     return normalized
 
 def rank_candidates(restaurants, pref):
     ranked = []
-    pref_cuisines = set([c.lower() for c in pref.get("cuisines", [])])
-    pref_place = pref.get("place", "").lower()
+    pref_cuisines = set([str(c).lower() for c in pref.get("cuisines", []) if c])
+    pref_place = str(pref.get("place") or "").lower()
     pref_price = pref.get("price", 0)
     pref_rating = pref.get("rating", 0)
 
     for r in restaurants:
         # Simple Filtering
-        place_ok = not pref_place or pref_place in r["place"].lower()
-        price_ok = not pref_price or r["price_for_two"] <= pref_price
-        rating_ok = not pref_rating or r["rating"] >= pref_rating
-        cuisine_ok = not pref_cuisines or any(c.lower() in pref_cuisines for c in r["cuisines"])
+        r_place = str(r.get("place") or "").lower()
+        place_ok = not pref_place or pref_place in r_place
+        price_ok = not pref_price or r.get("price_for_two", 0) <= pref_price
+        rating_ok = not pref_rating or r.get("rating", 0) >= pref_rating
+        
+        r_cuisines = [str(c).lower() for c in r.get("cuisines", [])]
+        cuisine_ok = not pref_cuisines or any(c in pref_cuisines for c in r_cuisines)
 
         if place_ok and price_ok and rating_ok and cuisine_ok:
             # Scoring
             cuisine_score = 0
             if pref_cuisines:
-                matches = sum(1 for c in r["cuisines"] if c.lower() in pref_cuisines)
+                matches = sum(1 for c in r_cuisines if c in pref_cuisines)
                 cuisine_score = matches / len(pref_cuisines)
             
-            rating_score = r["rating"] / 5.0
+            rating_score = r.get("rating", 0) / 5.0
             price_score = 1.0
-            if pref_price and r["price_for_two"] > pref_price:
-                price_score = max(0, 1 - (r["price_for_two"] - pref_price) / pref_price)
+            r_price = r.get("price_for_two", 0)
+            if pref_price and r_price > pref_price:
+                price_score = max(0, 1 - (r_price - pref_price) / pref_price)
             
             score = (cuisine_score * 0.4) + (rating_score * 0.3) + (price_score * 0.2) + (1.0 * 0.1)
             r["match_score"] = round(score, 4)
             ranked.append(r)
     
-    return sorted(ranked, key=lambda x: x["match_score"], reverse=True)[:20]
+    return sorted(ranked, key=lambda x: x.get("match_score", 0), reverse=True)[:20]
 
 def generate_groq_recommendations(apiKey, model, preference, candidates):
     if not apiKey:
@@ -156,12 +161,10 @@ if not restaurants:
 with st.sidebar:
     st.header("User Preferences")
     price = st.number_input("Max Budget (₹)", min_value=0, value=1500, step=100)
-    place = st.selectbox("Locality", options=sorted(list(set(r['place'] for r in restaurants if r['place']))), index=0)
+    place = st.text_input("Locality", placeholder="e.g. Banashankari")
     rating = st.slider("Min Rating", min_value=0.0, max_value=5.0, value=4.0, step=0.1)
-    
-    all_cuisines = set()
-    for r in restaurants: all_cuisines.update(r['cuisines'])
-    cuisines = st.multiselect("Cuisines", options=sorted(list(all_cuisines)))
+    cuisine_raw = st.text_input("Cuisines (comma separated)", placeholder="e.g. Italian, North Indian")
+    cuisines = [c.strip() for c in cuisine_raw.split(",") if c.strip()]
 
     discover = st.button("Discover Restaurants")
 
