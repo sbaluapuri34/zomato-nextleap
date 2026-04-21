@@ -144,8 +144,6 @@ st.markdown("""
     <style>
     .main { background-color: #0f172a; color: #f1f5f9; }
     .stButton>button { background-color: #ff4757; color: white; border-radius: 12px; border: none; }
-    .stTextInput>div>div>input { background-color: #1e293b; color: white; border-radius: 10px; }
-    .stNumberInput>div>div>input { background-color: #1e293b; color: white; border-radius: 10px; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -161,10 +159,15 @@ if not restaurants:
 with st.sidebar:
     st.header("User Preferences")
     price = st.number_input("Max Budget (₹)", min_value=0, value=1500, step=100)
-    place = st.text_input("Locality", placeholder="e.g. Banashankari")
+    
+    all_places = sorted(list(set(r['place'] for r in restaurants if r['place'])))
+    place = st.selectbox("Locality", options=[""] + all_places, index=0, help="Type to search localities")
+    
     rating = st.slider("Min Rating", min_value=0.0, max_value=5.0, value=4.0, step=0.1)
-    cuisine_raw = st.text_input("Cuisines (comma separated)", placeholder="e.g. Italian, North Indian")
-    cuisines = [c.strip() for c in cuisine_raw.split(",") if c.strip()]
+    
+    all_cuisines = set()
+    for r in restaurants: all_cuisines.update(r['cuisines'])
+    cuisines = st.multiselect("Cuisines", options=sorted(list(all_cuisines)), help="Type to search cuisines")
 
     discover = st.button("Discover Restaurants")
 
