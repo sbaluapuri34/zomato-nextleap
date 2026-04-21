@@ -20,7 +20,7 @@ def parse_price(raw: Any) -> int:
 
 def parse_rating(raw: Any) -> float:
     if isinstance(raw, (int, float)): return float(raw)
-    match = re.search(r"([0-5](?:\.\d+)?)\", str(raw or ""))
+    match = re.search(r"([0-5](?:\.\d+)?)", str(raw or ""))
     return float(match.group(1)) if match else 0.0
 
 def canonicalize_cuisines(raw: Any) -> List[str]:
