@@ -48,12 +48,13 @@ def load_data():
     
     rows = data.get("rows", [])
     normalized = []
-    for row in rows:
+    for item in rows:
+        row = item.get("row", {})
         normalized.append({
             "name": str(row.get("name") or "").strip(),
-            "place": str(row.get("place") or row.get("location") or "").strip(),
-            "price_for_two": parse_price(row.get("price_for_two") or row.get("approx_cost(for two people)") or 0),
-            "rating": parse_rating(row.get("rating") or row.get("rate") or 0),
+            "place": str(row.get("location") or row.get("place") or "").strip(),
+            "price_for_two": parse_price(row.get("approx_cost(for two people)") or row.get("price_for_two") or 0),
+            "rating": parse_rating(row.get("rate") or row.get("rating") or 0),
             "cuisines": canonicalize_cuisines(row.get("cuisines") or []),
         })
     return normalized
