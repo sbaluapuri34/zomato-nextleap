@@ -5,7 +5,7 @@ const datasetId =
   process.env.HF_DATASET_ID || "ManikaSaini/zomato-restaurant-recommendation";
 const outputDir =
   process.env.PHASE1_OUTPUT_DIR || path.resolve("phase1", "artifacts", "ingestion-runs");
-const maxRows = Number.parseInt(process.env.PHASE1_MAX_ROWS || "100", 10);
+const maxRows = Number.parseInt(process.env.PHASE1_MAX_ROWS || "5000", 10);
 
 async function main() {
   const result = await ingestDataset({

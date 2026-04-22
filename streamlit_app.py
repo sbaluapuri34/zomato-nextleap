@@ -37,27 +37,47 @@ def canonicalize_cuisines(raw: Any) -> List[str]:
     return out
 
 def load_data():
+    # Use curated data from Phase 2 if available, otherwise fallback to Phase 1 (raw)
+    curated_dir = ROOT / "phase2" / "artifacts" / "curated-runs"
+    if curated_dir.exists():
+        snapshots = sorted(list(curated_dir.glob("*-curated-snapshot.json")), key=os.path.getmtime, reverse=True)
+        if snapshots:
+            print(f"Loading curated snapshot: {snapshots[0].name}")
+            with open(snapshots[0], "r", encoding="utf-8") as f:
+                data = json.load(f)
+            return data.get("restaurants", [])
+    
+    # Fallback to Phase 1 raw data if Phase 2 is missing
     runs_dir = ROOT / "phase1" / "artifacts" / "ingestion-runs"
     if not runs_dir.exists(): return []
     
     snapshots = sorted(list(runs_dir.glob("*-raw-snapshot.json")), key=os.path.getmtime, reverse=True)
     if not snapshots: return []
     
+    print(f"Fallback: Loading raw snapshot: {snapshots[0].name}")
     with open(snapshots[0], "r", encoding="utf-8") as f:
         data = json.load(f)
     
     rows = data.get("rows", [])
-    normalized = []
+    normalized_map = {}
     for item in rows:
         row = item.get("row", {})
-        normalized.append({
-            "name": str(row.get("name") or "").strip(),
-            "place": str(row.get("location") or row.get("place") or "").strip(),
-            "price_for_two": parse_price(row.get("approx_cost(for two people)") or row.get("price_for_two") or 0),
-            "rating": parse_rating(row.get("rate") or row.get("rating") or 0),
-            "cuisines": canonicalize_cuisines(row.get("cuisines") or []),
-        })
-    return normalized
+        name = str(row.get("name") or "").strip()
+        place = str(row.get("location") or row.get("place") or "").strip()
+        
+        if not name: continue
+        
+        key = f"{name.lower()}|{place.lower()}"
+        if key not in normalized_map:
+            normalized_map[key] = {
+                "name": name,
+                "place": place,
+                "price_for_two": parse_price(row.get("approx_cost(for two people)") or row.get("price_for_two") or 0),
+                "rating": parse_rating(row.get("rate") or row.get("rating") or 0),
+                "cuisines": canonicalize_cuisines(row.get("cuisines") or []),
+            }
+    return list(normalized_map.values())
+
 
 def rank_candidates(restaurants, pref):
     ranked = []

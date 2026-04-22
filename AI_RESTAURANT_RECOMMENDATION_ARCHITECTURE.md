@@ -65,7 +65,16 @@ Dataset source:
    - Applies final sort/ranking rules.
    - Formats response payload.
 
-7. **Observability and Governance**
+7. **Auto-Suggestion Engine**
+   - Precomputes unique metadata (places, cuisines, ratings) from the curated dataset.
+   - Provides real-time typeahead suggestions to the UI.
+
+8. **Streamlit Deployment Hub (Python Port)**
+   - Provides a standalone, production-grade Python implementation of the entire stack.
+   - Enables cloud hosting on Streamlit Cloud with integrated UI and backend.
+   - **Note**: For the current environment, Phase 1 (Ingestion) and Phase 2 (Normalization) are also implemented via Python scripts to ensure compatibility.
+
+9. **Observability and Governance**
    - Logs requests/responses (with privacy controls), errors, and latency.
    - Tracks recommendation quality and data freshness.
 
@@ -76,7 +85,7 @@ Dataset source:
 ### A) Hugging Face Dataset Connector
 - Uses Hugging Face API to fetch dataset records.
 - Supports:
-  - initial full fetch
+  - initial full fetch using **paginated batch requests** to bypass single-response row limits
   - periodic refresh (scheduled)
   - retry and backoff on transient failures
 - Persists:
@@ -130,6 +139,17 @@ Pipeline stages:
   - primary: normalized restaurant name + normalized area/locality
   - fallback: deterministic hash over (name, cuisines, rating, price, place)
 
+### F) Streamlit Deployment Hub (Python Port)
+- Re-implements the core ranking and Groq integration in Python.
+- Uses Streamlit-native UI components (searchable selectboxes, multiselects).
+- Directly parses the JSON snapshots from Phase 1.
+- Optimized for Streamlit Cloud hosting and performance.
+
+### G) Intelligent Suggestion Engine
+- Backend: Aggregates unique fields from the processed dataset into a metadata summary.
+- Frontend: Implements debounced typeahead with keyboard navigation.
+- Matcher: Performs case-insensitive partial string matching on locality and cuisines.
+
 ---
 
 ## 5) Data Model (Conceptual)
@@ -175,8 +195,8 @@ Pipeline stages:
 - approved data quality rules
 
 ### Phase 1 - Data Ingestion from Hugging Face API
-- build dataset connector for the Hugging Face source
-- implement raw snapshot persistence
+- build dataset connector for the Hugging Face source with **batch-based pagination support**
+- implement raw snapshot persistence for large datasets (up to 5,000+ rows)
 - implement ingestion run logging and failure handling
 
 **Exit criteria**
@@ -238,6 +258,7 @@ Pipeline stages:
 
 **Exit criteria**
 - UI page is fully connected to backend recommendation endpoint
+- Intelligent auto-suggestions are available for Locality and Cuisines
 - users can submit preferences and receive clear recommendations from Groq-powered flow
 - UI behavior validated for success, empty, and failure scenarios
 

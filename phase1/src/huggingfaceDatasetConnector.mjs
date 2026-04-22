@@ -114,14 +114,35 @@ export async function ingestDataset({
       fetchImpl,
       retries,
     });
-    const rows = await fetchRows(datasetId, {
-      config,
-      split,
-      offset: 0,
-      length: maxRows,
-      fetchImpl,
-      retries,
-    });
+    const rows = [];
+    const batchSize = 100;
+    let currentOffset = 0;
+
+    while (rows.length < maxRows) {
+      const remaining = maxRows - rows.length;
+      const lengthToFetch = Math.min(batchSize, remaining);
+
+      const batch = await fetchRows(datasetId, {
+        config,
+        split,
+        offset: currentOffset,
+        length: lengthToFetch,
+        fetchImpl,
+        retries,
+      });
+
+      if (!batch || batch.length === 0) {
+        break;
+      }
+
+      rows.push(...batch);
+      currentOffset += batch.length;
+
+      // If we got fewer rows than requested, it means we reached the end of the dataset
+      if (batch.length < lengthToFetch) {
+        break;
+      }
+    }
 
     const rawPayload = {
       datasetId,

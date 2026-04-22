@@ -1,8 +1,8 @@
 # Phase 1 - Data Ingestion from Hugging Face API
 
 This phase implements:
-- dataset connector for Hugging Face dataset API
-- raw snapshot persistence
+- dataset connector for Hugging Face dataset API with **batch-based fetching**
+- raw snapshot persistence (supporting 5,000+ rows)
 - ingestion run metadata logging
 - retry with exponential backoff for transient failures
 

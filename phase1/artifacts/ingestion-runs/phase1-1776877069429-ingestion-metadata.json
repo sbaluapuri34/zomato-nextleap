@@ -1,0 +1,10 @@
+{
+  "runId": "phase1-1776877069429",
+  "timestamp": "2026-04-22T16:57:49.430370Z",
+  "status": "success",
+  "rowCount": 3400,
+  "config": {
+    "datasetId": "ManikaSaini/zomato-restaurant-recommendation",
+    "maxRows": 5000
+  }
+}

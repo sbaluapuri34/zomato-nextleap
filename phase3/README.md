@@ -1,31 +1,23 @@
-# Phase 3 - Retrieval and Ranking Engine
+# Phase 2 - Data Normalization and Validation
 
 This phase implements:
-- deterministic filtering for `price`, `place`, `rating`, `cuisine`
-- candidate ranking using weighted scoring
-- top-K shortlist generation for LLM input
+- source-to-curated schema mapping
+- price normalization (`1,500` -> `1500`)
+- rating normalization (`4.1/5` -> `4.1`)
+- cuisine canonicalization and deduplication
+- schema validation and bad-record rejection
 
 ## Files
-- `phase3/src/retrievalRankingEngine.mjs`
-- `phase3/scripts/smoke.mjs`
-- `phase3/tests/phase3.test.mjs`
-
-## Testing status
-- Automated tests are available for normalization, filtering, and ranking logic.
-- A local smoke script is also provided for quick manual validation.
+- `phase2/src/normalizationPipeline.mjs`
+- `phase2/tests/phase2.test.mjs`
+- `phase2/scripts/smoke.mjs`
 
 ## Run tests
 ```bash
-node --test "phase3/tests/phase3.test.mjs"
+node --test "phase2/tests/phase2.test.mjs"
 ```
 
-## Run manual smoke test
+## Run smoke check
 ```bash
-node phase3/scripts/smoke.mjs
+node phase2/scripts/smoke.mjs
 ```
-
-## Output
-The smoke script prints ranked recommendations with:
-- normalized fields
-- `match_score`
-- `score_breakdown` (cuisine/rating/price/place)
